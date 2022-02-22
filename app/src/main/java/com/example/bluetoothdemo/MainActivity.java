@@ -9,10 +9,13 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
+
+import androidx.annotation.NonNull;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.appcompat.app.AppCompatActivity;
@@ -32,6 +35,8 @@ import java.lang.reflect.Method;
 import java.util.Set;
 import java.util.UUID;
 
+import pub.devrel.easypermissions.EasyPermissions;
+
 public class MainActivity extends AppCompatActivity {
 
     private final String TAG = MainActivity.class.getSimpleName();
@@ -42,6 +47,8 @@ public class MainActivity extends AppCompatActivity {
     private final static int REQUEST_ENABLE_BT = 1; // used to identify adding bluetooth names
     public final static int MESSAGE_READ = 2; // used in bluetooth handler to identify message update
     private final static int CONNECTING_STATUS = 3; // used in bluetooth handler to identify message status
+
+    public static final String[] ANDROID_12_BLUETOOTH_PERMISSIONS = { Manifest.permission.BLUETOOTH_SCAN, Manifest.permission.BLUETOOTH_CONNECT} ;
 
     // GUI Components
     private TextView mBluetoothStatus;
@@ -81,9 +88,15 @@ public class MainActivity extends AppCompatActivity {
         mDevicesListView.setAdapter(mBTArrayAdapter); // assign model to view
         mDevicesListView.setOnItemClickListener(mDeviceClickListener);
 
-        // Ask for location permission if not already allowed
-        if(ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED)
-            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_COARSE_LOCATION}, 1);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            if (!EasyPermissions.hasPermissions(this, ANDROID_12_BLUETOOTH_PERMISSIONS)) {
+                EasyPermissions.requestPermissions(this, "please give me bluetooth permissions", 2,ANDROID_12_BLUETOOTH_PERMISSIONS);
+            }
+        }
+        else {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED)
+                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_COARSE_LOCATION}, 1);
+        }
 
 
         mHandler = new Handler(Looper.getMainLooper()){
@@ -152,6 +165,12 @@ public class MainActivity extends AppCompatActivity {
                 }
             });
         }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        EasyPermissions.onRequestPermissionsResult(requestCode, permissions, grantResults, this);
     }
 
     private void bluetoothOn(){
