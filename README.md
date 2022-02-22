@@ -1,6 +1,8 @@
 # Android12BluetoothDemo
 
 Based on this project: https://github.com/melvyniandrag/Android-Simple-Bluetooth-Example
+with a little of this mixed in:
+https://github.com/googlesamples/easypermissions
 
 But had to update a some code and configurations to make it work for Android 12.
 
